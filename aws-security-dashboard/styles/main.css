@@ -1,0 +1,117 @@
+/* Root variables */
+:root {
+    --primary-color: #FF9900;
+    --secondary-color: #232F3E;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --background-color: #f8f9fa;
+    --text-color: #333333;
+}
+
+/* Base styles */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Main container */
+.main {
+    padding: 2rem;
+}
+
+/* Card styles */
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.card-header {
+    background: var(--secondary-color);
+    color: white;
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+/* Finding severity styles */
+.severity-high {
+    background-color: #ffebee;
+    border-left: 4px solid var(--danger-color);
+}
+
+.severity-medium {
+    background-color: #fff3e0;
+    border-left: 4px solid var(--warning-color);
+}
+
+.severity-low {
+    background-color: #e8f5e9;
+    border-left: 4px solid var(--success-color);
+}
+
+/* Score card styles */
+.score-card {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.score-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Finding item styles */
+.finding-item {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+
+/* Tab styles */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 50px;
+    white-space: pre-wrap;
+    background-color: transparent;
+    border-radius: 4px 4px 0 0;
+    gap: 1rem;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: transparent;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+/* Dashboard title */
+.dashboard-title {
+    color: var(--secondary-color);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* Last scan timestamp */
+.last-scan {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+/* Account info text */
+.account-info-text {
+    color: #000000;
+    margin-top: 15px;
+    font-weight: 600;
+} 
