@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Security Dashboard Infrastructure'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    Description: Environment name
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID for the security dashboard
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 key pair
+
+  WorkshopIP:
+    Type: String
+    Description: IP address range for workshop participants
+    Default: 0.0.0.0/0
+
+Resources:
+  # Security Group for EC2
+  DashboardSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Security Dashboard EC2 instance
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref WorkshopIP
+        - IpProtocol: tcp
+          FromPort: 8501
+          ToPort: 8501
+          CidrIp: !Ref WorkshopIP
+
+  # EC2 Instance
+  DashboardInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c9c942bd7bf113a2  # Amazon Linux 2023 AMI
+      InstanceType: t3.medium
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref DashboardSecurityGroup
+      SubnetId: !Select [0, !GetAZs '']
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y python3-pip git
+          pip3 install streamlit boto3 pandas plotly python-dotenv requests
+          git clone https://github.com/kjhyuok/aws-security-dashboard.git /home/ec2-user/aws-security-dashboard
+          cd /home/ec2-user/aws-security-dashboard
+          streamlit run app.py --server.port 8501 --server.address 0.0.0.0 &
+
+  # WAF Web ACL
+  DashboardWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub ${Environment}-dashboard-waf
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 1
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSet
+
+  # GuardDuty Detector
+  GuardDutyDetector:
+    Type: AWS::GuardDuty::Detector
+    Properties:
+      Enable: true
+      FindingPublishingFrequency: FIFTEEN_MINUTES
+
+  # VPC Flow Logs
+  VPCFlowLogsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: vpc-flow-logs.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonVPCFlowLogsRole
+
+  VPCFlowLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /vpc/flow-logs/${Environment}
+      RetentionInDays: 30
+
+  VPCFlowLogs:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt VPCFlowLogsRole.Arn
+      LogGroupName: !Ref VPCFlowLogsGroup
+      ResourceId: !Ref VpcId
+      ResourceType: VPC
+      TrafficType: ALL
+
+Outputs:
+  DashboardInstancePublicIP:
+    Description: Public IP address of the Security Dashboard instance
+    Value: !GetAtt DashboardInstance.PublicIp
+
+  DashboardInstancePublicDNS:
+    Description: Public DNS name of the Security Dashboard instance
+    Value: !GetAtt DashboardInstance.PublicDnsName
+
+  DashboardURL:
+    Description: URL for accessing the Security Dashboard
+    Value: !Sub http://${DashboardInstance.PublicDnsName}:8501
+
+  WebACLId:
+    Description: ID of the WAF Web ACL
+    Value: !Ref DashboardWebACL
+
+  GuardDutyDetectorId:
+    Description: ID of the GuardDuty Detector
+    Value: !Ref GuardDutyDetector
+
+  VPCFlowLogsGroupName:
+    Description: Name of the VPC Flow Logs Log Group
+    Value: !Ref VPCFlowLogsGroup 
