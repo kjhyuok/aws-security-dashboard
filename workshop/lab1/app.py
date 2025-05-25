@@ -23,6 +23,8 @@ if 'aws_region' not in st.session_state:
     st.session_state.aws_region = "ap-northeast-2"
 if 'validated' not in st.session_state:
     st.session_state.validated = False
+if 'use_instance_profile' not in st.session_state:
+    st.session_state.use_instance_profile = False
 
 # Sidebar
 with st.sidebar:
@@ -31,39 +33,70 @@ with st.sidebar:
     # Account information
     st.markdown("<p class='account-info-text'>계정 정보</p>", unsafe_allow_html=True)
     
+    # 인스턴스 프로파일 사용 옵션 추가
+    use_instance_profile = st.checkbox("인스턴스 프로파일 사용", value=st.session_state.use_instance_profile)
+    st.session_state.use_instance_profile = use_instance_profile
+    
     if not st.session_state.validated:
-        account_id = st.text_input("AWS 계정 ID", placeholder="123456789012", key="input_account_id")
-        access_key = st.text_input("AWS Access Key ID", type="password", key="input_access_key")
-        secret_key = st.text_input("AWS Secret Access Key", type="password", key="input_secret_key")
-        aws_region = st.selectbox("AWS 리전", ["ap-northeast-2", "us-east-1", "us-west-2"], key="input_aws_region")
-        
-        login_col1, login_col2 = st.columns(2)
-        with login_col1:
-            validate_button = st.button("계정 검증", use_container_width=True)
-        with login_col2:
-            scan_button = st.button("보안 스캔 시작", use_container_width=True)
+        if use_instance_profile:
+            # 인스턴스 프로파일 사용 시 리전만 선택
+            aws_region = st.selectbox("AWS 리전", ["ap-northeast-2", "us-east-1", "us-west-2"], key="input_aws_region")
             
-        if validate_button:
-            if not account_id:
-                st.error("AWS 계정 ID를 입력해주세요.")
-            elif not access_key or not secret_key:
-                st.error("AWS Access Key와 Secret Key를 모두 입력해주세요.")
-            else:
-                # 세션 상태에 계정 정보 저장
-                st.session_state.account_id = account_id
-                st.session_state.aws_region = aws_region
-                st.session_state.access_key = access_key
-                st.session_state.secret_key = secret_key
-                st.session_state.validated = True
+            login_col1, login_col2 = st.columns(2)
+            with login_col1:
+                validate_button = st.button("인스턴스 프로파일 검증", use_container_width=True)
+            with login_col2:
+                scan_button = st.button("보안 스캔 시작", use_container_width=True)
+                
+            if validate_button:
                 try:
+                    # 인스턴스 프로파일로 세션 생성
+                    session = create_aws_session(use_profile=False, profile_name=None, access_key=None, secret_key=None, region=aws_region)
+                    # 계정 ID 가져오기
+                    sts_client = session.client('sts')
+                    account_id = sts_client.get_caller_identity()["Account"]
+                    
+                    # 세션 상태에 저장
+                    st.session_state.account_id = account_id
+                    st.session_state.aws_region = aws_region
+                    st.session_state.use_instance_profile = True
+                    st.session_state.validated = True
                     st.rerun()
-                except:
-                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"인스턴스 프로파일 검증 실패: {e}")
+        else:
+            # 기존 방식 - 계정 정보 직접 입력
+            account_id = st.text_input("AWS 계정 ID", placeholder="123456789012", key="input_account_id")
+            access_key = st.text_input("AWS Access Key ID", type="password", key="input_access_key")
+            secret_key = st.text_input("AWS Secret Access Key", type="password", key="input_secret_key")
+            aws_region = st.selectbox("AWS 리전", ["ap-northeast-2", "us-east-1", "us-west-2"], key="input_aws_region")
+            
+            login_col1, login_col2 = st.columns(2)
+            with login_col1:
+                validate_button = st.button("계정 검증", use_container_width=True)
+            with login_col2:
+                scan_button = st.button("보안 스캔 시작", use_container_width=True)
+                
+            if validate_button:
+                if not account_id:
+                    st.error("AWS 계정 ID를 입력해주세요.")
+                elif not access_key or not secret_key:
+                    st.error("AWS Access Key와 Secret Key를 모두 입력해주세요.")
+                else:
+                    # 세션 상태에 계정 정보 저장
+                    st.session_state.account_id = account_id
+                    st.session_state.aws_region = aws_region
+                    st.session_state.access_key = access_key
+                    st.session_state.secret_key = secret_key
+                    st.session_state.validated = True
+                    st.rerun()
     else:
         # 검증된 상태일 때 계정 정보 표시
         st.success(f"계정 ID: {st.session_state.account_id}")
-        st.info("Access Key: ********")
+        if not st.session_state.use_instance_profile:
+            st.info("Access Key: ********")
         st.info(f"리전: {st.session_state.aws_region}")
+        st.info(f"인증 방식: {'인스턴스 프로파일' if st.session_state.use_instance_profile else '액세스 키'}")
         
         reset_col1, reset_col2 = st.columns(2)
         with reset_col1:
@@ -73,10 +106,7 @@ with st.sidebar:
             
         if reset_button:
             st.session_state.validated = False
-            try:
-                st.rerun()
-            except:
-                st.experimental_rerun()
+            st.rerun()
 
 # Main content
 st.markdown('<h1 class="dashboard-title">AWS Security Dashboard</h1>', unsafe_allow_html=True)
@@ -87,48 +117,53 @@ tabs = st.tabs(["👥 IAM 계정 현황", "📜 CloudTrail 로그", "⚠️ 발�
 
 # Scan button handler
 if scan_button:
-    # 계정 검증 상태에 따라 계정 정보 가져오기
-    if not st.session_state.validated:
-        account_id = st.session_state.get("input_account_id", "")
-        aws_region = st.session_state.get("input_aws_region", "ap-northeast-2")
-        access_key = st.session_state.get("input_access_key", "")
-        secret_key = st.session_state.get("input_secret_key", "")
-        profile_name = "default"
-    else:
-        account_id = st.session_state.account_id
-        aws_region = st.session_state.aws_region
-        access_key = st.session_state.access_key
-        secret_key = st.session_state.secret_key
-        profile_name = "default"
-    
-    if not account_id:
-        st.sidebar.error("AWS 계정 ID를 입력해주세요.")
-    elif not access_key or not secret_key:
-        st.sidebar.error("AWS Access Key와 Secret Key를 모두 입력해주세요.")
-    else:
-        try:
-            with st.spinner("AWS 계정 정보를 가져오는 중입니다..."):
-                # Create AWS session
-                session = create_aws_session(False, profile_name, access_key, secret_key, aws_region)
+    try:
+        with st.spinner("AWS 계정 정보를 가져오는 중입니다..."):
+            # 인스턴스 프로파일 또는 입력된 자격 증명으로 세션 생성
+            if st.session_state.use_instance_profile:
+                aws_region = st.session_state.get("aws_region", "ap-northeast-2")
+                session = create_aws_session(use_profile=False, profile_name=None, access_key=None, secret_key=None, region=aws_region)
+            else:
+                # 계정 검증 상태에 따라 계정 정보 가져오기
+                if not st.session_state.validated:
+                    account_id = st.session_state.get("input_account_id", "")
+                    aws_region = st.session_state.get("input_aws_region", "ap-northeast-2")
+                    access_key = st.session_state.get("input_access_key", "")
+                    secret_key = st.session_state.get("input_secret_key", "")
+                    
+                    if not account_id:
+                        st.sidebar.error("AWS 계정 ID를 입력해주세요.")
+                        raise ValueError("AWS 계정 ID가 필요합니다.")
+                    elif not access_key or not secret_key:
+                        st.sidebar.error("AWS Access Key와 Secret Key를 모두 입력해주세요.")
+                        raise ValueError("AWS 자격 증명이 필요합니다.")
+                else:
+                    account_id = st.session_state.account_id
+                    aws_region = st.session_state.aws_region
+                    access_key = st.session_state.access_key
+                    secret_key = st.session_state.secret_key
                 
-                # Get IAM information
-                iam_info = get_iam_info(session)
-                st.session_state.iam_info = iam_info
-                
-                # Get CloudTrail events
-                cloudtrail_events = get_cloudtrail_events(session)
-                st.session_state.cloudtrail_events = cloudtrail_events
-                
-                # Set scan completed flag
-                st.session_state.scan_completed = True
-                
-                # Show success message
-                st.sidebar.success(f"AWS 계정 정보를 성공적으로 가져왔습니다.")
-                st.sidebar.info(f"사용자: {len(iam_info['users'])}명, 역할: {len(iam_info['roles'])}개, 그룹: {len(iam_info['groups'])}개")
+                session = create_aws_session(use_profile=False, profile_name=None, access_key=access_key, secret_key=secret_key, region=aws_region)
+            
+            # Get IAM information
+            iam_info = get_iam_info(session)
+            st.session_state.iam_info = iam_info
+            
+            # Get CloudTrail events
+            cloudtrail_events = get_cloudtrail_events(session)
+            st.session_state.cloudtrail_events = cloudtrail_events
+            
+            # Set scan completed flag
+            st.session_state.scan_completed = True
+            
+            # Show success message
+            st.sidebar.success(f"AWS 계정 정보를 성공적으로 가져왔습니다.")
+            st.sidebar.info(f"사용자: {len(iam_info['users'])}명, 역할: {len(iam_info['roles'])}개, 그룹: {len(iam_info['groups'])}개")
+            if 'users_without_mfa' in iam_info and iam_info['users_without_mfa']:
                 st.sidebar.warning(f"MFA가 없는 사용자: {len(iam_info['users_without_mfa'])}명")
-        
-        except Exception as e:
-            st.sidebar.error(f"오류 발생: {e}")
+    
+    except Exception as e:
+        st.sidebar.error(f"오류 발생: {e}")
 
 # IAM Account Status tab
 with tabs[0]:
@@ -222,4 +257,3 @@ with tabs[3]:
 
 # Footer
 st.markdown('<p style="text-align: center; color: #666666; font-size: 0.8rem; margin-top: 30px;">AWS 운영자를 위한 보안 대시보드 | Amazon Q 핸즈온 워크샵</p>', unsafe_allow_html=True)
-
