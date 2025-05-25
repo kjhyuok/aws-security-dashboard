@@ -55,7 +55,7 @@ with st.sidebar:
             
             login_col1, login_col2 = st.columns(2)
             with login_col1:
-                validate_button = st.button("인스턴스 프로파일 검증", use_container_width=True)
+                validate_button = st.button("프로파일 검증", use_container_width=True)
             with login_col2:
                 scan_button = st.button("보안 스캔 시작", use_container_width=True)
                 
