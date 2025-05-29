@@ -1,10 +1,32 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import subprocess
 from utils.aws_client import create_aws_session, get_iam_info, get_cloudtrail_events
 from utils.s3_security import get_s3_security_issues
 from utils.waf_security import get_waf_security_issues
 from utils.guardduty_security import get_guardduty_findings, format_guardduty_findings, get_guardduty_status
+
+def get_q_recommendation(issue_type, issue_details):
+    """
+    Amazon Q CLI에 물어볼 수 있는 상세한 프롬프트를 생성합니다.
+    """
+    prompt = f"""
+AWS 보안 이슈 해결 방법을 찾고 있습니다. 다음 이슈에 대한 해결 방법을 알려주세요:
+
+이슈 유형: {issue_type}
+이슈 상세 내용: {issue_details}
+
+다음 정보를 포함한 해결 방법을 제시해주세요:
+1. 이슈의 심각도와 잠재적 위험
+2. AWS 콘솔에서의 구체적인 해결 단계
+3. AWS CLI나 CloudFormation을 사용한 자동화 방법
+4. 해결 후 확인해야 할 검증 단계
+5. 향후 유사한 이슈를 방지하기 위한 모범 사례
+
+AWS 보안 모범 사례와 최신 가이드라인을 참고하여 답변해주세요.
+"""
+    return prompt
 
 # Page configuration
 st.set_page_config(page_title="AWS Security Dashboard", page_icon="🔒", layout="wide")
@@ -55,7 +77,7 @@ with st.sidebar:
             
             login_col1, login_col2 = st.columns(2)
             with login_col1:
-                validate_button = st.button("프로파일 검증", use_container_width=True)
+                validate_button = st.button("인스턴스 프로파일 검증", use_container_width=True)
             with login_col2:
                 scan_button = st.button("보안 스캔 시작", use_container_width=True)
                 
@@ -433,79 +455,41 @@ with tabs[3]:
     if not st.session_state.scan_completed:
         st.info("보안 스캔을 시작하여 권장 조치를 확인하세요.")
     else:
-        # 권장 조치 목록
-        recommendations = []
+        # HIGH 심각도 이슈 필터링
+        high_severity_issues = []
         
-        # IAM 관련 권장 조치
-        iam_info = st.session_state.iam_info if hasattr(st.session_state, 'iam_info') else {}
-        
-        # MFA가 없는 사용자 확인
-        if 'users_without_mfa' in iam_info and iam_info['users_without_mfa']:
-            recommendations.append({
-                'title': 'MFA가 없는 사용자 발견',
-                'description': f"{len(iam_info['users_without_mfa'])}명의 사용자가 MFA를 사용하지 않고 있습니다. 모든 IAM 사용자에게 MFA를 활성화하는 것이 좋습니다.",
-                'severity': 'HIGH',
-                'action': 'AWS 콘솔에서 IAM > 사용자로 이동하여 MFA 디바이스를 등록하세요.',
-                'affected_resources': iam_info['users_without_mfa']
-            })
-        
-        # S3 관련 권장 조치
-        if hasattr(st.session_state, 's3_issues') and st.session_state.s3_issues:
-            high_issues = [i for i in st.session_state.s3_issues if i.get('severity') == 'HIGH']
-            if high_issues:
-                recommendations.append({
-                    'title': 'S3 버킷 보안 취약점 발견',
-                    'description': f"{len(high_issues)}개의 심각한 S3 버킷 보안 취약점이 발견되었습니다. 즉시 조치가 필요합니다.",
-                    'severity': 'HIGH',
-                    'action': '발견 사항 탭에서 자세한 내용을 확인하고 조치하세요.',
-                    'affected_resources': [i.get('resource_id', 'N/A') for i in high_issues]
+        # S3 HIGH 이슈
+        for issue in st.session_state.s3_issues:
+            if issue.get('severity') == 'HIGH':
+                high_severity_issues.append({
+                    'type': 'S3',
+                    'details': issue.get('description', ''),
+                    'resource': issue.get('resource', '')
                 })
         
-        # WAF 관련 권장 조치
-        if hasattr(st.session_state, 'waf_issues') and st.session_state.waf_issues:
-            high_issues = [i for i in st.session_state.waf_issues if i.get('severity') == 'HIGH']
-            if high_issues:
-                recommendations.append({
-                    'title': 'WAF 보안 구성 이슈 발견',
-                    'description': f"{len(high_issues)}개의 심각한 WAF 보안 구성 이슈가 발견되었습니다. 웹 애플리케이션이 적절히 보호되지 않을 수 있습니다.",
-                    'severity': 'HIGH',
-                    'action': '발견 사항 탭에서 자세한 내용을 확인하고 WAF 규칙을 추가하세요.',
-                    'affected_resources': [i.get('resource_id', 'N/A') for i in high_issues]
+        # WAF HIGH 이슈
+        for issue in st.session_state.waf_issues:
+            if issue.get('severity') == 'HIGH':
+                high_severity_issues.append({
+                    'type': 'WAF',
+                    'details': issue.get('description', ''),
+                    'resource': issue.get('resource', '')
                 })
         
-        # GuardDuty 관련 권장 조치
-        if hasattr(st.session_state, 'guardduty_findings') and st.session_state.guardduty_findings:
-            high_findings = [f for f in st.session_state.guardduty_findings if f.get('심각도', 0) > 7]
-            if high_findings:
-                recommendations.append({
-                    'title': 'GuardDuty에서 심각한 위협 발견',
-                    'description': f"{len(high_findings)}개의 심각한 보안 위협이 GuardDuty에서 발견되었습니다. 즉시 조치가 필요합니다.",
-                    'severity': 'CRITICAL',
-                    'action': '발견 사항 탭에서 자세한 내용을 확인하고 조치하세요.',
-                    'affected_resources': [f.get('리소스 ID', 'N/A') for f in high_findings]
-                })
-        
-        # 권장 조치 표시
-        if recommendations:
-            for rec in recommendations:
-                severity_class = "severity-high" if rec['severity'] in ["CRITICAL", "HIGH"] else \
-                                "severity-medium" if rec['severity'] == "MEDIUM" else "severity-low"
-                
-                st.markdown(f"""
-                <div class="finding-item {severity_class}">
-                    <h3 style="color: #000000;">{rec['title']}</h3>
-                    <p style="color: #000000;"><strong style="color: #000000;">심각도:</strong> {rec['severity']}</p>
-                    <p style="color: #000000;"><strong style="color: #000000;">설명:</strong> {rec['description']}</p>
-                    <p style="color: #000000;"><strong style="color: #000000;">권장 조치:</strong> {rec['action']}</p>
-                    <p style="color: #000000;"><strong style="color: #000000;">영향 받는 리소스:</strong> {', '.join(rec['affected_resources'][:5])}{'...' if len(rec['affected_resources']) > 5 else ''}</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Amazon Q에게 조치 방법 물어보기 버튼
-                if st.button(f"Amazon Q에게 '{rec['title']}' 조치 방법 물어보기", key=f"ask_q_{recommendations.index(rec)}"):
-                    st.info("Amazon Q에게 조치 방법을 물어보는 기능은 현재 개발 중입니다.")
+        if high_severity_issues:
+            st.warning(f"발견된 HIGH 심각도 이슈: {len(high_severity_issues)}개")
+            
+            for idx, issue in enumerate(high_severity_issues):
+                with st.expander(f"{issue['type']} - {issue['details']}"):
+                    st.markdown(f"**리소스**: {issue['resource']}")
+                    
+                    if st.button(f"Amazon Q에게 {issue['type']} 이슈 해결 방법 물어보기", key=f"q_btn_{issue['type']}_{idx}"):
+                        prompt = get_q_recommendation(issue['type'], issue['details'])
+                        st.markdown("### Amazon Q CLI에 물어볼 프롬프트")
+                        st.code(prompt, language="text")
+                        st.info("위 프롬프트를 복사하여 Amazon Q Dev Chat 터미널에서 사용하세요.")
         else:
-            st.success("모든 보안 검사를 통과했습니다! 현재 권장 조치가 없습니다.")
+            st.success("HIGH 심각도의 보안 이슈가 발견되지 않았습니다.")
     st.markdown('</div></div>', unsafe_allow_html=True)
 
 # Footer
