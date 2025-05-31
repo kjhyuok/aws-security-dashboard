@@ -36,6 +36,6 @@ AWS 환경에서의 보안 위협 탐지, 분석 및 해결 과정을 AWS Securi
    - 자동화 스크립트 개발
 
 ## 참고 자료
-- [Amazon Q Developer CLI 공식 문서]([https://docs.aws.amazon.com/q-developer-cli](https://aws.amazon.com/q/developer/?sc_icampaign=aware_q_dev&sc_ichannel=ha&sc_icontent=awssm-2842900-aware&sc_iplace=signin&trk=829bcc2c-e1f5-4e11-87d0-d2eb29f99620~ha_awssm-2842900-aware)
+- [Amazon Q Developer CLI 공식 문서](https://docs.aws.amazon.com/q-developer-cli](https://aws.amazon.com/q/developer/?sc_icampaign=aware_q_dev&sc_ichannel=ha&sc_icontent=awssm-2842900-aware&sc_iplace=signin&trk=829bcc2c-e1f5-4e11-87d0-d2eb29f99620~ha_awssm-2842900-aware)
 - [AWS 보안 모범 사례](https://aws.amazon.com/security)
 - [Streamlit 공식 문서](https://docs.streamlit.io)
