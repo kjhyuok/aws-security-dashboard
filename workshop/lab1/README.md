@@ -20,7 +20,7 @@
 2. 또한 이 AWS Security Dashboard이 Amazon Q Developer CLI를 활용하여 개발 되었음을 인지하고 개발과정에서 사용된 Prompt와 추가적인 활용법을 함께 확인해 봅니다.
 
 ### 2단계: 보안 위협 탐지 및 분석
-1. 2단계는 AWS 환경에서의 보안 위협 탐지, 분석 및 해결 과정을 AWS Security Dashboard를 통해서 수행해 봅니다.
+AWS 환경에서의 보안 위협 탐지, 분석 및 해결 과정을 AWS Security Dashboard를 통해서 수행해 봅니다.
 먼저 AWS IAM 자격 증명으로 대시보드에 로그인하고 Account내 IAM정보, CloudTrail정보를 조회해 보고 미리 설정된 S3 버킷 보안 설정, WAF 규칙, GuardDuty 알림 등을 분석하여 보안 위협을 스캔합니다. 발견된 위협은 Low(경
 미), Medium(중간), High(심각) 등급으로 분류되며 이러한 문제해결을 위해 Amazon Q Developer CLI를 활용해 보는 과정입니다.
 
