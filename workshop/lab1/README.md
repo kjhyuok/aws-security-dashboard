@@ -3,7 +3,7 @@
 ## 개요
 이 실습에서는 Amazon Q Developer CLI를 활용하여 개발된 AWS Security Dashboard를 통해 보안 위협을 탐지하고, Amazon Q Developer의 도움을 받아 해결하는 과정을 경험해보겠습니다. 이 대시보드는 100% Amazon Q Developer CLI를 활용하여 개발되었으며, AWS 계정 내의 보안 위협을 효과적으로 모니터링하고 대응할 수 있는 도구입니다.
 
-![merged (5)](https://github.com/user-attachments/assets/fc6aebc9-f737-4b7b-8360-52ae8dd2213c)
+<img width="1376" alt="image" src="https://github.com/user-attachments/assets/0c0f9520-c226-4a3a-9d31-2b17a88ede13" />
 
 ## 실습 목표
 - Amazon Q Developer CLI를 활용한 보안 대시보드 개발 방법 이해
