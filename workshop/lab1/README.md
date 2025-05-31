@@ -26,16 +26,12 @@ AWS 환경에서의 보안 위협 탐지, 분석 및 해결 과정을 AWS Securi
 먼저 AWS IAM 자격 증명으로 대시보드에 로그인하고 Account내 IAM정보, CloudTrail정보를 조회해 보고 미리 설정된 S3 버킷 보안 설정, WAF 규칙, GuardDuty 알림 등을 분석하여 보안 위협을 스캔합니다. 발견된 위협은 Low(경
 미), Medium(중간), High(심각) 등급으로 분류되며 이러한 문제해결을 위해 Amazon Q Developer CLI를 활용해 보는 과정입니다.
 
-## AWS Security Dashboard 추가 개발 가이드 (선택)
-1. 대시보드 기능 확장
+### 3단계: AWS Security Dashboard 추가 개발 가이드 (선택)
+Amazon Q Developer CLI를 통해서 대시보드 기능 확장을 자유롭게 구현해 보세요.
    - 새로운 보안 메트릭 추가
    - 커스텀 알림 설정
    - 보고서 생성 기능
-
-2. Amazon Q Developer CLI 활용 팁
-   - 효율적인 프롬프트 작성 방법
-   - CLI 명령어 최적화
-   - 자동화 스크립트 개발
+   - 기타
 
 ## 참고 자료
 - [Amazon Q Developer CLI 공식 문서](https://aws.amazon.com/q/developer/?sc_icampaign=aware_q_dev&sc_ichannel=ha&sc_icontent=awssm-2842900-aware&sc_iplace=signin&trk=829bcc2c-e1f5-4e11-87d0-d2eb29f99620~ha_awssm-2842900-aware)
