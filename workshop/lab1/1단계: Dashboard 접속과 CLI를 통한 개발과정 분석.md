@@ -51,14 +51,19 @@
    - 구체적인 Prompt를 통해서 Application 개발명세를 Q CLI를 통해서 작성해 봅니다.
    - 대시보드의 목적, 개발언어, 필요한 기능동작에 대해 Front Page를 먼저 작업할 수 있도록 지시 합니다.
    - Front page가 만족스러울 때까지 결과를 확인하며 디테일하게 가이드를 내려주고 필요에 따라 디자인 개선도 요청해 봅니다.
+<img width="985" alt="image" src="https://github.com/user-attachments/assets/cd03545c-026a-4e19-b4b3-d6f33de3837d" />
+<img width="1261" alt="image" src="https://github.com/user-attachments/assets/f11a838c-30c8-49bc-9c5e-65980be10be7" />
 
 2. 완성된 Frontpage에 구현된 각 버튼 그리고 연동되는 계정에 대한 설정등을 요청하기
    - 각 버튼을 눌렀을때의 동작을 구체적으로 가이드 해줍니다.
    - AWS와의 연동이 필요한 시점에는 Role, Accesskey 등 기반으로 부탁하거나 또 다른 안정적인 수단이 없는지 확인하고 가이드 받습니다.
+<img width="940" alt="image" src="https://github.com/user-attachments/assets/136a2742-ccb6-4936-aba6-2d1a16fd6df6" />
+<img width="1047" alt="image" src="https://github.com/user-attachments/assets/40b2864a-9039-42ac-a023-5b9a766984f4" />
 
 3. 트러블 슈팅
    - 개발과정중 발생하는 Page의 에러나 메시지에 대해서는 실시간으로 Amazon Q Developer CLI 에게 질문하여 개선합니다.
    - Amazon Q Developer CLI 와 개발중에는 현재 수행하는 프로젝트의 절대경로를 포함하여 질문해보고 분석을 주기적으로 요청하며, 개발의 의도를 주입할 수 있도록 재확인 하면 결과물이 더 좋습니다.
+<img width="1190" alt="image" src="https://github.com/user-attachments/assets/6e8c21e7-2503-4241-bfcb-b774a0b1bd3b" />
 
 ### 참고 사항
 - AWS Security Dashboard는 Streamlit 기반으로 구현
