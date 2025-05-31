@@ -1,90 +1,116 @@
-# Lab 1: AWS Security Dashboard 인프라 구축
+# Lab 3: Amazon Q Developer CLI를 활용한 보안 점검 및 모니터링
 
 ## 개요
-이 실습에서는 AWS Security Dashboard를 위한 인프라를 CloudFormation을 사용하여 구축합니다. 
-구축되는 인프라에는 AWS WAF, GuardDuty, VPC Flow Logs가 포함되어 있으며, 
-이러한 서비스들이 수집하는 보안 데이터를 대시보드에서 시각화할 수 있는 기반을 마련합니다.
+이 실습에서는 Amazon Q Developer CLI를 활용하여 개발된 AWS Security Dashboard를 통해 보안 위협을 탐지하고, Amazon Q Developer의 도움을 받아 해결하는 과정을 경험해보겠습니다. 이 대시보드는 100% Amazon Q Developer CLI를 활용하여 개발되었으며, AWS 계정 내의 보안 위협을 효과적으로 모니터링하고 대응할 수 있는 도구입니다.
+
+## 실습 목표
+- Amazon Q Developer CLI를 활용한 보안 대시보드 개발 방법 이해
+- AWS 계정 내 보안 위협 요소 탐지 및 분석
+- Amazon Q Developer를 통한 보안 위협 해결 방법 학습
+- CLI 명령어를 활용한 효율적인 개발 방법 습득
 
 ## 사전 요구사항
 - AWS 계정
-- AWS CLI 설치 및 구성
-- CloudFormation 템플릿 실행 권한
-- EC2 키 페어 (SSH 접속용)
+- Amazon Q Developer CLI 설치
+- Python 3.8 이상
+- 필요한 Python 패키지 (requirements.txt 참조)
 
 ## 실습 단계
 
-### 1. CloudFormation 스택 생성
-1. AWS Management Console에 로그인합니다.
-2. CloudFormation 서비스로 이동합니다.
-3. "스택 생성" > "새 리소스 사용(표준)"을 선택합니다.
-4. `security-dashboard-infra.yaml` 템플릿을 업로드합니다.
-5. 스택 이름을 입력하고 다음을 클릭합니다.
-6. 파라미터를 검토하고 필요한 경우 수정합니다:
-   - Environment: dev 또는 prod
-   - VpcId: 기본 VPC ID
-   - KeyName: EC2 인스턴스 접속에 사용할 키 페어 이름
-   - WorkshopIP: 워크샵 참가자의 IP 주소 범위 (CIDR 표기법)
-7. 스택을 생성합니다.
+### 1단계: 환경 설정 및 대시보드 접속
+1. Amazon Q Developer CLI 설치
+   ```bash
+   curl -s https://raw.githubusercontent.com/aws/aws-q-developer-cli/main/install.sh | bash
+   source ~/.bashrc
+   ```
 
-### 2. 생성된 리소스 확인
-CloudFormation 스택이 생성되면 다음 리소스들이 자동으로 구성됩니다:
+2. 워크샵 저장소 클론
+   ```bash
+   git clone workshopstudio://ws-content-ea2f9c07-fa4c-4a78-b1c4-aa0426834e76/ai-powered-devsecops-with-amazon-q-developer-cli
+   cd ai-powered-devsecops-with-amazon-q-developer-cli
+   ```
 
-- **EC2 인스턴스**
-  - Amazon Linux 2023 AMI
-  - t2.micro 인스턴스 유형
-  - 보안 그룹 (SSH 및 Streamlit 포트)
-  - IAM 역할 및 정책
+3. 필요한 패키지 설치
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-- **VPC Flow Logs**
-  - CloudWatch Logs 그룹
-  - IAM 역할 및 정책
+4. AWS 자격 증명 설정
+   ```bash
+   aws configure
+   ```
 
-- **GuardDuty**
-  - GuardDuty 감지기
-  - 기본 보안 설정
+5. 대시보드 실행
+   ```bash
+   streamlit run app.py
+   ```
 
-- **WAF**
-  - Web ACL
-  - AWS 관리형 규칙 세트
-  - OWASP 규칙 세트
+### 2단계: 보안 위협 탐지 및 분석
+1. 대시보드 로그인 및 계정 인증
+   - AWS 자격 증명을 사용하여 대시보드에 로그인
+   - 실습용 계정 연결 확인
 
-- **Security Dashboard**
-  - S3 버킷
-  - Lambda 함수
-  - API Gateway
-  - IAM 역할 및 정책
+2. 보안 위협 스캔
+   - S3 버킷 보안 설정 검사
+   - WAF 규칙 및 설정 분석
+   - GuardDuty 알림 확인
+   - VPC Flow Logs 분석
 
-### 3. 출력값 확인
-스택 생성이 완료되면 다음 출력값들을 확인할 수 있습니다:
+3. 위협 등급 분류 확인
+   - Low: 경미한 보안 위협
+   - Medium: 중간 수준의 보안 위협
+   - High: 심각한 보안 위협
 
-- WorkshopInstancePublicIP: 워크샵 EC2 인스턴스의 공용 IP 주소
-- WorkshopInstancePublicDNS: 워크샵 EC2 인스턴스의 공용 DNS 이름
-- SecurityDashboardAPIEndpoint: API Gateway 엔드포인트 URL
-- SecurityDashboardBucketName: S3 버킷 이름
-- GuardDutyDetectorId: GuardDuty 감지기 ID
-- WAFWebACLId: WAF Web ACL ID
+### 3단계: Amazon Q Developer를 활용한 위협 해결
+1. High 등급 위협 분석
+   - 위협 상세 정보 확인
+   - 영향도 및 잠재적 위험 평가
 
-### 4. EC2 인스턴스 접속
-1. SSH를 사용하여 EC2 인스턴스에 접속합니다:
-```bash
-ssh -i <your-key.pem> ec2-user@<WorkshopInstancePublicIP>
-```
+2. Amazon Q Developer CLI 활용
+   ```bash
+   q "AWS S3 버킷의 퍼블릭 액세스 차단 방법 알려줘"
+   q "GuardDuty 알림에 대한 대응 방안 제시해줘"
+   ```
 
-2. 필요한 패키지가 자동으로 설치되었는지 확인합니다:
-```bash
-python3 --version
-pip3 list
-```
+3. 권장 조치 실행
+   - Amazon Q Developer의 제안에 따른 보안 설정 변경
+   - 변경 사항 검증 및 모니터링
 
-## 다음 단계
-Lab 2에서는 이 인프라를 기반으로 Security Dashboard 애플리케이션을 개발하고, 
-수집된 보안 데이터를 시각화하는 방법을 실습합니다.
+## 추가 개발 가이드 (선택)
+1. 대시보드 기능 확장
+   - 새로운 보안 메트릭 추가
+   - 커스텀 알림 설정
+   - 보고서 생성 기능
+
+2. Amazon Q Developer CLI 활용 팁
+   - 효율적인 프롬프트 작성 방법
+   - CLI 명령어 최적화
+   - 자동화 스크립트 개발
+
+## 실습 정리
+1. 생성된 리소스 정리
+   - 테스트용 S3 버킷 삭제
+   - 임시 보안 그룹 제거
+   - GuardDuty 설정 초기화
+
+2. 학습 내용 정리
+   - 보안 위협 탐지 방법
+   - Amazon Q Developer CLI 활용 방법
+   - 보안 대시보드 개발 경험
+
+## 참고 자료
+- [Amazon Q Developer CLI 공식 문서](https://docs.aws.amazon.com/q-developer-cli)
+- [AWS 보안 모범 사례](https://aws.amazon.com/security)
+- [Streamlit 공식 문서](https://docs.streamlit.io)
 
 ## 문제 해결
-- CloudFormation 스택 생성 실패 시 CloudFormation 콘솔에서 이벤트 로그를 확인합니다.
-- IAM 권한 문제가 발생한 경우 사용 중인 IAM 사용자/역할의 권한을 확인합니다.
-- 리소스 생성 실패 시 AWS 서비스 할당량을 확인합니다.
-- EC2 인스턴스 접속 실패 시:
-  - 키 페어가 올바르게 생성되었는지 확인
-  - 보안 그룹에서 SSH 포트(22)가 열려있는지 확인
-  - 인스턴스의 상태 확인 
+- CLI 설치 문제
+- AWS 자격 증명 오류
+- 대시보드 연결 실패
+- 위협 스캔 오류
+
+## 다음 단계
+- 추가 보안 메트릭 구현
+- 자동화된 대응 시스템 구축
+- 커스텀 알림 설정
+- 보고서 자동화
