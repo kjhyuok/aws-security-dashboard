@@ -10,73 +10,21 @@
 - CLI 명령어를 활용한 효율적인 개발 방법 습득
 
 ## 사전 요구사항
-- AWS 계정
-- Amazon Q Developer CLI 설치
-- Python 3.8 이상
-- 필요한 Python 패키지 (requirements.txt 참조)
+- AI-Powered DevSecOps with Amazon Q Developer CLI Workshop 시작시 Preparation > 2. 실습환경 구성 과정에서 Amazon Q Developer CLI 를 설치한바 있으니 필요시 참고를 부탁드립니다.
 
 ## 실습 단계
 
-### 1단계: 환경 설정 및 대시보드 접속
-1. Amazon Q Developer CLI 설치
-   ```bash
-   curl -s https://raw.githubusercontent.com/aws/aws-q-developer-cli/main/install.sh | bash
-   source ~/.bashrc
-   ```
+### 1단계: Dashboard 접속과 CLI를 통한 개발과정 분석
+1. 현재 각 실습자의 AWS Account에는 Cloudformation을 통해 이미 AWS Security Dashboard를 구성하는 리소스(EC2)와 개발코드(Streamlit)가 배포되어 있습니다. 여러분은 그 URL에 접근하여 Dashboard에 접근해 보고 구성된 기능과 실습용 AWS Account이 노출된 보안위협을 스캔해 볼 수 있습니다. 
 
-2. 워크샵 저장소 클론
-   ```bash
-   git clone workshopstudio://ws-content-ea2f9c07-fa4c-4a78-b1c4-aa0426834e76/ai-powered-devsecops-with-amazon-q-developer-cli
-   cd ai-powered-devsecops-with-amazon-q-developer-cli
-   ```
-
-3. 필요한 패키지 설치
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. AWS 자격 증명 설정
-   ```bash
-   aws configure
-   ```
-
-5. 대시보드 실행
-   ```bash
-   streamlit run app.py
-   ```
+2. 또한 이 AWS Security Dashboard이 Amazon Q Developer CLI를 활용하여 개발 되었음을 인지하고 개발과정에서 사용된 Prompt와 추가적인 활용법을 함께 확인해 봅니다.
 
 ### 2단계: 보안 위협 탐지 및 분석
-1. 대시보드 로그인 및 계정 인증
-   - AWS 자격 증명을 사용하여 대시보드에 로그인
-   - 실습용 계정 연결 확인
+1. 2단계는 AWS 환경에서의 보안 위협 탐지, 분석 및 해결 과정을 AWS Security Dashboard를 통해서 수행해 봅니다.
+먼저 AWS IAM 자격 증명으로 대시보드에 로그인하고 Account내 IAM정보, CloudTrail정보를 조회해 보고 미리 설정된 S3 버킷 보안 설정, WAF 규칙, GuardDuty 알림 등을 분석하여 보안 위협을 스캔합니다. 발견된 위협은 Low(경
+미), Medium(중간), High(심각) 등급으로 분류되며 이러한 문제해결을 위해 Amazon Q Developer CLI를 활용해 보는 과정입니다.
 
-2. 보안 위협 스캔
-   - S3 버킷 보안 설정 검사
-   - WAF 규칙 및 설정 분석
-   - GuardDuty 알림 확인
-   - VPC Flow Logs 분석
-
-3. 위협 등급 분류 확인
-   - Low: 경미한 보안 위협
-   - Medium: 중간 수준의 보안 위협
-   - High: 심각한 보안 위협
-
-### 3단계: Amazon Q Developer를 활용한 위협 해결
-1. High 등급 위협 분석
-   - 위협 상세 정보 확인
-   - 영향도 및 잠재적 위험 평가
-
-2. Amazon Q Developer CLI 활용
-   ```bash
-   q "AWS S3 버킷의 퍼블릭 액세스 차단 방법 알려줘"
-   q "GuardDuty 알림에 대한 대응 방안 제시해줘"
-   ```
-
-3. 권장 조치 실행
-   - Amazon Q Developer의 제안에 따른 보안 설정 변경
-   - 변경 사항 검증 및 모니터링
-
-## 추가 개발 가이드 (선택)
+## AWS Security Dashboard 추가 개발 가이드 (선택)
 1. 대시보드 기능 확장
    - 새로운 보안 메트릭 추가
    - 커스텀 알림 설정
@@ -87,30 +35,7 @@
    - CLI 명령어 최적화
    - 자동화 스크립트 개발
 
-## 실습 정리
-1. 생성된 리소스 정리
-   - 테스트용 S3 버킷 삭제
-   - 임시 보안 그룹 제거
-   - GuardDuty 설정 초기화
-
-2. 학습 내용 정리
-   - 보안 위협 탐지 방법
-   - Amazon Q Developer CLI 활용 방법
-   - 보안 대시보드 개발 경험
-
 ## 참고 자료
 - [Amazon Q Developer CLI 공식 문서](https://docs.aws.amazon.com/q-developer-cli)
 - [AWS 보안 모범 사례](https://aws.amazon.com/security)
 - [Streamlit 공식 문서](https://docs.streamlit.io)
-
-## 문제 해결
-- CLI 설치 문제
-- AWS 자격 증명 오류
-- 대시보드 연결 실패
-- 위협 스캔 오류
-
-## 다음 단계
-- 추가 보안 메트릭 구현
-- 자동화된 대응 시스템 구축
-- 커스텀 알림 설정
-- 보고서 자동화
