@@ -1,6 +1,7 @@
 import boto3
 from botocore.exceptions import ClientError
 from .smart_i18n import smart_get_text, get_smart_title
+from .i18n import get_text
 
 def get_s3_security_issues(session):
     """S3 버킷의 보안 이슈를 스캔합니다."""
